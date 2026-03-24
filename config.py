@@ -36,11 +36,12 @@ WEBHOOK_URL = os.getenv("WEBHOOK_URL", "")
 # Audio settings
 SAMPLE_RATE = 8000
 LANGUAGE = "ta-IN"
-SPEAKER = "shubh"
+SPEAKER = "aayan"
 STT_MODEL = "saaras:v3"
 TTS_MODEL = "bulbul:v3"
 TTS_SAMPLE_RATE = 22050
-TTS_PACE = 1.06
+TTS_PACE = 1.04
+TTS_ENABLE_PREPROCESSING = True
 TTS_CODEC = "mp3"
 TTS_CODEC_TELEPHONY = "linear16"
 TTS_SAMPLE_RATE_TELEPHONY = 8000
@@ -150,14 +151,11 @@ def build_greeting_intro(order: dict) -> str:
 
 
 def build_greeting_items(order: dict) -> str:
-    """Order details — items + total + question. Spoken after vendor acknowledges."""
+    """Order details — items + question. Spoken after vendor acknowledges."""
     items_summary = _build_items_summary(order)
-    total = _calc_total(order)
-    total_tamil = amount_to_tamil(total)
     return (
         f"Order ID {order['order_id']}... "
         f"{items_summary} "
-        f"total {total_tamil} ரூபாய்... "
         f"இது ஓகே-வா?"
     )
 
@@ -205,11 +203,16 @@ CALL FLOW:
 1. Greeting — already spoken. Now wait for vendor response.
 2. Handle whatever they say using the intents below.
 
-HUMAN-LIKE SPEECH RULES:
-- Vary responses: e.g. instead of always "சரி, confirm பண்ணிட்டேன்", sometimes say "ஓகே, போட்டுட்டேன்... நன்றி" or "நல்லது, confirm ஆயிடுச்சு".
-- Use natural pauses: "..." for short breath.
-- End questions friendly: ஓகே-வா? or சரியா? or இல்லையா?
+HUMAN-LIKE SPEECH RULES (CRITICAL — you must sound like a REAL person, NOT a bot):
+- Keep responses SHORT — 1 to 2 sentences max. Real humans don't give speeches.
+- Vary responses EVERY time: e.g. instead of always "சரி, confirm பண்ணிட்டேன்", sometimes say "ஓகே, போட்டுட்டேன்... நன்றி" or "நல்லது, confirm ஆயிடுச்சு" or "done பண்ணிட்டேன்... thanks!"
+- Use natural pauses: "..." for short breath, like real speech.
+- Use casual acknowledgments: "ஆ", "ஹ்ம்ம்", "ஓகே", "சரி சரி" before responding.
+- End questions casually: ஓகே-வா? or சரியா? or சொல்லுங்க?
 - If they hesitate: "புரியுதா? மறுபடி சொல்லவா?"
+- NEVER use formal/written Tamil — speak like you're talking to a friend in a shop.
+- React naturally: if vendor sounds busy, say "சரி சரி, quick-ஆ முடிக்கலாம்". If they sound confused, slow down.
+- NEVER repeat the same phrase you used in a previous turn.
 
 CRITICAL PRIORITY RULE:
 - If vendor says ANYTHING about modifying, changing, or editing the order (even combined with other words), ALWAYS treat it as MODIFICATION — NEVER as acceptance or rejection.
@@ -268,7 +271,7 @@ INTENT HANDLING:
    - Always try to match order-related intent first before calling unclear.
 
 IMPORTANT BEHAVIOR RULES:
-- Say total price in the initial greeting. If vendor asks about individual item prices, tell them.
+- NEVER mention price or total unless the vendor specifically asks about it. If vendor asks about price/total/amount, tell them the details.
 - NEVER deflect order-related questions (repeat, details, quantity, items). Always answer using order details below.
 - Only deflect COMPLETELY unrelated topics (weather, sports, personal, other business): "இது order confirmation call மட்டும் தான்... ஆர்டர் ஓகே-வா?"
 - NEVER say "I am AI" or "I am a bot". Stay in character as Ramesh.
